@@ -34,24 +34,25 @@ namespace WpfApp
             }
 
             var directories = Directory.GetDirectories(DirectoryPath);
-            StringBuilder builder = new StringBuilder();
-            StringBuilder builder2 = new StringBuilder();
-            StringBuilder resultList = new StringBuilder();
+
+            StringBuilder directoryBuilder = new StringBuilder();
+            StringBuilder imageBuilder = new StringBuilder();
+            StringBuilder resultBuilder = new StringBuilder();
 
             foreach (var directory in directories)
             {
-               builder.AppendLine(directory);
+                directoryBuilder.AppendLine(directory);
                var directoryImages = Directory.GetFiles(directory, fileFilter);
           
                 foreach (var image in directoryImages)
                 {
-                    CreateBlobs(directory, image,resultList);
-                    builder2.AppendLine(image);
+                    CreateBlobs(directory, image, resultBuilder);
+                    imageBuilder.AppendLine(image);
                 }
             }
-            Directories.Text = builder.ToString();
-            Images.Text = builder2.ToString();
-            result.Text = resultList.ToString();
+            Directories.Text = directoryBuilder.ToString();
+            Images.Text = imageBuilder.ToString();
+            result.Text = resultBuilder.ToString();
 
         }
         private void CreateBlobs(string containerPath, string blobPath, StringBuilder result)
@@ -86,16 +87,6 @@ namespace WpfApp
                     CloudBlockBlob blob = (CloudBlockBlob)item;
                     result.AppendLine($"Block blob of length {blob.Properties.Length} : {blob.Uri}");
                 }
-                else if (item.GetType() == typeof(CloudPageBlob))
-                {
-                    CloudPageBlob pageBlob = (CloudPageBlob)item;
-                    result.AppendLine($"Page blob of length {pageBlob.Properties.Length} : {pageBlob.Uri}");
-                }
-                else if (item.GetType() == typeof(CloudBlobDirectory))
-                {
-                    CloudBlobDirectory directory = (CloudBlobDirectory)item;
-                    result.AppendLine($"Directory: { directory.Uri}");
-                }
             }
             
 
@@ -103,15 +94,12 @@ namespace WpfApp
         private string GetAppropriateNames(string fileName)
         {
             string message = "";
-            string pattern = @"^(?!.*\-\-)[A-Za-z0-9][A-Za-z0-9\-]{2,63}$"; //Container names must start with a letter or number, can contain only letters, numbers, and the dash (-) character.
+            string pattern = @"^(?!.*\-\-)[A-Za-z0-9][A-Za-z0-9\-]{2,63}$";
             Regex regex = new Regex(pattern);
 
-            if (!regex.IsMatch(fileName) && string.IsNullOrEmpty(message))
-                message = "Container names must start with a letter or number, and can contain only letters, numbers, and the dash (-) character.";
-
-            
-            if (!string.IsNullOrEmpty(message))
+            if (!regex.IsMatch(fileName))
             {
+                message = "Container names must start with a letter or number, and can contain only letters, numbers, and the dash (-) character.";
                 MessageBoxResult result = MessageBox.Show(message, "Confirmation", MessageBoxButton.OKCancel, MessageBoxImage.Question);
                 Environment.Exit(0);
             }
